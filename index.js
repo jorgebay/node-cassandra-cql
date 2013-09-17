@@ -16,7 +16,9 @@ var optionsDefault = {
   //maximum amount of times an execute can be retried (using another connection) because of an unhealthy server response
   maxExecuteRetries: 3,
   //maximum time (in milliseconds) to get a healthy connection from the pool. It should be connection Timeout * n.
-  getAConnectionTimeout: 3500
+  getAConnectionTimeout: 3500,
+  //number of connections to open for each host
+  poolSize: 1
 }
 //Represents a pool of connection to multiple hosts
 function Client (options) {
@@ -33,15 +35,24 @@ function Client (options) {
   this.preparedQueries = {};
   
   var self = this;
-  options.hosts.forEach(function (hostPort, index){
-    var host = hostPort.split(':');
-    var connOptions = utils.extend(
-      {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
-    );
-    var c = new Connection(connOptions);
-    c.indexInPool = index;
-    self.connections.push(c);
-  });
+  var connCount = 0;
+  var poolSize = self.options.poolSize;
+  while (connCount++ < poolSize) {
+
+    options.hosts.forEach(function (hostPort, index){
+      var host = hostPort.split(':');
+      var connOptions = utils.extend(
+        {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
+      );
+
+      var c = new Connection(connOptions);
+      c.indexInPool = ( (connCount-1) * poolSize) + index;
+      self.connections.push(c);
+    });
+
+  };
+
+  this.emit('log', 'info', this.connections.length + ' connections created across ' + options.hosts.length + ' hosts.');
 }
 
 util.inherits(Client, events.EventEmitter);
