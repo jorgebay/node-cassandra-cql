@@ -268,6 +268,12 @@ Client.prototype.streamRows = function () {
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
 
+/**
+ * Prepares (the first time), executes the prepared query and calls emitts event for each row as soon as they are received.
+ * Calls callback after all rows have been sent
+ * Retries on multiple hosts if needed.
+ * @param {function} callback, executes callback(err, buffer) after all rows have been sent.
+ */
 Client.prototype.emitRows = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var emitter = new EventEmitter();
