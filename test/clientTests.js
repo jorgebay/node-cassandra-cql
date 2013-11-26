@@ -434,6 +434,87 @@ describe('Client', function () {
     });
   });
   
+  describe('#emitRows()', function (done) {
+    it('should emit each row and then call callback', function (done) {
+      var id = 150;
+      var blob = new Buffer('Frank Gallagher');
+      var gotData = false;
+
+      client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+        assert.ok(!err, err);
+        var stream = client.emitRows('SELECT id, blob_sample FROM sampletable2 WHERE id = ?', [id],
+          function (err, buffer){
+            assert.ok(!err, err);
+            assert.equal(buffer.length, 0, 'buffer should be empty');
+            assert.equal(gotData, true, 'data has to be sent');
+            done();
+          }
+        );
+
+        stream.on('data', 
+          function (row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
+            gotData = true;
+          });
+      });
+    });
+    
+    it('should emit once per row and then call callback', function (done) {
+      var counter = 0;
+      var id = 160;
+      var blob = new Buffer('Jack Bauer');
+      async.timesSeries(4, function (n, next) {
+        client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id+n, blob], next);
+      }, function (err) {
+        var counter = 0;
+        var stream = client.emitRows('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3],
+          function (err, buffer){
+            assert.ok(!err, err);
+            assert.equal(buffer.length, 0, 'buffer should be empty');
+            assert.equal(counter, 4, 'the total should be 4');
+            done();
+          }
+        );
+
+        stream.on('data', 
+          function (row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            counter++;
+          });
+      });
+    });
+
+    it('should buffer rows and replay them if first listener gets added', function (done) {
+      var counter = 0;
+      var id = 160;
+      var blob = new Buffer('Jack Bauer');
+      async.timesSeries(4, function (n, next) {
+        client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id+n, blob], next);
+      }, function (err) {
+        var counter = 0;
+        var stream = client.emitRows('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3],
+          function (err, buffer){
+            assert.ok(!err, err);
+            assert.equal(buffer.length, 4, 'buffer should be empty');
+            assert.equal(counter, 0, 'the total should be 0 because buffer was not emitted');
+
+            stream.on('data', 
+              function (row, stream) {
+                assert.equal(stream, null, 'The stream must be null');
+                counter++;
+                if( counter === 4 ) {
+                  done();
+                }
+              });
+            });
+          }
+        );
+
+    });
+  });
+
+  
   after(function (done) {
     client.shutdown(done);
   });
