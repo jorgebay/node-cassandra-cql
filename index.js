@@ -268,6 +268,28 @@ Client.prototype.streamRows = function () {
 };
 
 /**
+ * Prepares (the first time), executes the prepared query and calls async callback for each row as soon as they are received.
+ * Calls endCallback after all rows have been sent
+ * Retries on multiple hosts if needed.
+ * @param {function} callback, executes callback(n, row) per each row received. (n = index)
+ * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been reveiced.
+ */
+Client.prototype.eachRow = function () {
+  var args = utils.parseCommonArgs.apply(null, arguments);
+  var index = 0;
+  args.options = utils.extend({}, args.options, {streamRows: true});
+
+  function callbackWrapper(err, res, stream) {
+    if( err || (!err && !res && !stream) ) {
+      args.endCallback(err, index);
+    } else {
+      args.callback(++index, res, stream);
+    }
+  }
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
+};
+
+/**
  * Executes a prepared query on a given connection
  */
 Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, callback) {

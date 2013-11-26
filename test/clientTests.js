@@ -385,8 +385,9 @@ describe('Client', function () {
       var id = 100;
       var blob = new Buffer('Freaks and geeks 1999');
       insertAndStream(client, blob, id, true, function (err, row, blobStream) {
+        if(!err && !row && !blobStream ) return done();
         assert.ok(!err, err);
-        assertStreamReadable(blobStream, blob, done);
+        assertStreamReadable(blobStream, blob, noop);
       });
     });
     
@@ -394,10 +395,10 @@ describe('Client', function () {
       var id = 110;
       var blob = null;
       insertAndStream(client, blob, id, true, function (err, row, blobStream) {
+        if(!err && !row && !blobStream ) return done();
         assert.ok(!err, err);
         assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
         assert.strictEqual(blobStream, null, 'The file stream must be NULL');
-        done();
       });
     });
   });
@@ -407,10 +408,10 @@ describe('Client', function () {
       var id = 150;
       var blob = new Buffer('Frank Gallagher');
       insertAndStream(client, blob, id, false, function (err, row, stream) {
+        if(!err && !row && !stream ) return done();
         assert.ok(!err, err);
         assert.equal(stream, null, 'The stream must be null');
-        assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.')
-        done();
+        assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
       });
     });
     
@@ -423,12 +424,57 @@ describe('Client', function () {
         var counter = 0;
         client.streamRows('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3], function (err, row) {
           assert.ok(!err, err);
+          if(!err && !row ) {
+            assert.equal(counter, 4, 'there should have been 4 rows');
+            return done();
+          }
           counter++;
-          //should callback 4 times
-          if (counter === 4) {
+        });
+      });
+    });
+  });
+
+  describe('#eachRow()', function (done) {
+    it('should callback for each row and then call end callback', function (done) {
+      var id = 150;
+      var blob = new Buffer('Frank Gallagher');
+
+      client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+        assert.ok(!err, err);
+        client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id = ?', [id],
+          function (n, row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
+            assert.equal(n, 1, 'the index should be 1');
+          },
+          function (err, total){
+            assert.ok(!err, err);
+            assert.equal(total, 1, 'the total should be 1');
             done();
           }
-        });
+        );
+      });
+    });
+    
+    it('should callback once per row and then call end callback', function (done) {
+      var counter = 0;
+      var id = 160;
+      var blob = new Buffer('Jack Bauer');
+      async.timesSeries(4, function (n, next) {
+        client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id+n, blob], next);
+      }, function (err) {
+        var counter = 0;
+        client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3],
+          function (n, row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            assert.equal(n, ++counter, 'the index should be ' + counter);
+          },
+          function (err, total){
+            assert.ok(!err, err);
+            assert.equal(total, 4, 'the total should be 4');
+            done();
+          }
+        );
       });
     });
   });
@@ -477,3 +523,5 @@ function assertStreamReadable(stream, originalBlob, callback) {
     callback();
   });
 }
+
+function noop(){/*NOOP*/}
