@@ -1,6 +1,7 @@
 var events = require('events');
 var util = require('util');
 var async = require('async');
+var EventEmitter = require('events').EventEmitter;
 var Connection = require('./lib/connection.js').Connection;
 var utils = require('./lib/utils.js');
 var types = require('./lib/types.js');
@@ -265,6 +266,45 @@ Client.prototype.streamRows = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   args.options = utils.extend({}, args.options, {streamRows: true});
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
+};
+
+/**
+ * Prepares (the first time), executes the prepared query and calls emitts event for each row as soon as they are received.
+ * Calls callback after all rows have been sent
+ * Retries on multiple hosts if needed.
+ * @param {function} callback, executes callback(err, buffer) after all rows have been sent.
+ */
+Client.prototype.emitRows = function () {
+  var args = utils.parseCommonArgs.apply(null, arguments);
+  var emitter = new EventEmitter();
+  var buffer = [];
+
+  emitter.on('newListener', function(type) {
+    if ( type !== 'data' ) return;
+    setImmediate(function(){
+      var data;
+      while( data = buffer.shift() ) {
+        emitter.emit('data', data.res, data.stream);
+      }
+    });
+  });
+
+  args.options = utils.extend({}, args.options, {streamRows: true});
+
+  function callbackWrapper(err, res, stream) {
+    if( err || (!err && !res && !stream) ) {
+      args.callback(err, buffer);
+    } else {
+      if(emitter.listeners('data').length > 0) {
+        emitter.emit('data', res, stream);
+      } else {
+        buffer.push({res: res, stream:stream});
+      }
+    }
+  }
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
+
+  return emitter;
 };
 
 /**
