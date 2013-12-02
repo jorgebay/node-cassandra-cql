@@ -68,6 +68,7 @@ describe('types', function () {
         assert.strictEqual(guessDataType('a string'), dataTypes.text, 'Guess type for an string value failed');
         assert.strictEqual(guessDataType(new Buffer('bip bop')), dataTypes.blob, 'Guess type for a buffer value failed');
         assert.strictEqual(guessDataType(new Date()), dataTypes.timestamp, 'Guess type for a Date value failed');
+        assert.strictEqual(guessDataType(1385971420272), dataTypes.bigint, 'Guess type for a long number value failed');
         assert.strictEqual(guessDataType(new Int64(10, 10)), dataTypes.bigint, 'Guess type for a Int64 value failed');
         assert.strictEqual(guessDataType(uuid.v4()), dataTypes.uuid, 'Guess type for a UUID value failed');
       });
