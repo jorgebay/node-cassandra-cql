@@ -363,6 +363,10 @@ Client.prototype.stream = function () {
 
 Client.prototype.streamRows = Client.prototype.eachRow;
 
+Client.prototype.executeBatch = function () {
+  throw new Error('Method not supported by this version of the driver. Try using the driver version that implements Cassandra native protocol v2.');
+};
+
 /**
  * Executes a prepared query on a given connection
  */
