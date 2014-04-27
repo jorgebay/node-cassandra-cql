@@ -9,7 +9,7 @@ var userId = types.uuid();
 /**
  * All tests are working with column family user.
  * Create schema for user is :
- create table user (c
+ create table user (
      id : uuid,
      name text,
      age int,
