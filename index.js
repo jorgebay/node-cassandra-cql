@@ -2,6 +2,7 @@ var events = require('events');
 var util = require('util');
 var async = require('async');
 var Connection = require('./lib/connection.js').Connection;
+var CqlBuilder = require('./lib/cql-builder.js');
 var utils = require('./lib/utils.js');
 var types = require('./lib/types.js');
 
@@ -31,7 +32,7 @@ function Client(options) {
   //current connection index for prepared queries
   this.prepareConnectionIndex = 0;
   this.preparedQueries = {};
-  
+
   this._createPool();
 }
 
@@ -63,7 +64,7 @@ Client.prototype._connectAllHosts = function (connectCallback) {
   var errors = [];
   this.connecting = true;
   var self = this;
-  async.each(this.connections, 
+  async.each(this.connections,
     function (c, callback) {
       c.open(function (err) {
         if (err) {
@@ -89,9 +90,9 @@ Client.prototype._connectAllHosts = function (connectCallback) {
     });
 };
 
-/** 
+/**
  * Connects to all hosts, in case the pool is disconnected.
- * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect 
+ * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect
  */
 Client.prototype.connect = function (callback) {
   if (!callback) {
@@ -582,7 +583,7 @@ Client.prototype.shutdown = function (callback) {
 };
 
 /**
- * Holds the information of the connections in which a query is prepared 
+ * Holds the information of the connections in which a query is prepared
  */
 function PreparedInfo(query) {
   this.query = query;
@@ -620,4 +621,5 @@ util.inherits(PoolConnectionError, Error);
 
 exports.Client = Client;
 exports.Connection = Connection;
+exports.CqlBuilder = CqlBuilder;
 exports.types = types;
