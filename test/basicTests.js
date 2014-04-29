@@ -85,6 +85,16 @@ describe('encoder', function () {
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
 
+    it('should respect type hints for maps', function () {
+      var value = {value1: 5, value2: 10};
+      var encodedAsDouble = typeEncoder.encode({hint: 'map<text, double>', value: value});
+      var decodedAsDouble = typeEncoder.decode(encodedAsDouble, [dataTypes.map, [[dataTypes.text], [dataTypes.double]]]);
+      assert.strictEqual(util.inspect(decodedAsDouble), util.inspect(value));
+      var encodedAsInt = typeEncoder.encode({hint: dataTypes.map, value: value});
+      var decodedAsInt = typeEncoder.decode(encodedAsInt, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
+      assert.strictEqual(util.inspect(decodedAsInt), util.inspect(value));
+    });
+
     it('should encode and decode list<int>', function () {
       var value = [1, 2, 3, 4];
       var encoded = typeEncoder.encode({hint: 'list<int>', value: value});
