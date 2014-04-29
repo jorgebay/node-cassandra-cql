@@ -108,6 +108,17 @@ describe('encoder', function () {
       var decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
+
+    it('should ignore case and whitespace in type parameters', function () {
+      var listValue = [1, 2, 3, 4];
+      var encodedList = typeEncoder.encode({hint: 'LIST<Int>', value: listValue});
+      var decodedList = typeEncoder.decode(encodedList, [dataTypes.list, [dataTypes.int]]);
+      assert.strictEqual(util.inspect(decodedList), util.inspect(listValue));
+      var mapValue = {value1: 'Surprise', value2: 'Madafaka'};
+      var encodedMap = typeEncoder.encode({hint: 'Map<\tTEXT\t,\tTEXT\t>', value: mapValue});
+      var decodedMap = typeEncoder.decode(encodedMap, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decodedMap), util.inspect(mapValue));
+    });
   })
 });
 
