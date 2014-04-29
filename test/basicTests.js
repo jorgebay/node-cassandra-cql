@@ -85,6 +85,16 @@ describe('encoder', function () {
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
 
+    it('should respect type hints for maps', function () {
+      var value = {value1: 5, value2: 10};
+      var encodedAsDouble = typeEncoder.encode({hint: 'map<text, double>', value: value});
+      var decodedAsDouble = typeEncoder.decode(encodedAsDouble, [dataTypes.map, [[dataTypes.text], [dataTypes.double]]]);
+      assert.strictEqual(util.inspect(decodedAsDouble), util.inspect(value));
+      var encodedAsInt = typeEncoder.encode({hint: dataTypes.map, value: value});
+      var decodedAsInt = typeEncoder.decode(encodedAsInt, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
+      assert.strictEqual(util.inspect(decodedAsInt), util.inspect(value));
+    });
+
     it('should encode and decode list<int>', function () {
       var value = [1, 2, 3, 4];
       var encoded = typeEncoder.encode({hint: 'list<int>', value: value});
@@ -97,6 +107,17 @@ describe('encoder', function () {
       var encoded = typeEncoder.encode({hint: 'set<text>', value: value});
       var decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
+    });
+
+    it('should ignore case and whitespace in type parameters', function () {
+      var listValue = [1, 2, 3, 4];
+      var encodedList = typeEncoder.encode({hint: 'LIST<Int>', value: listValue});
+      var decodedList = typeEncoder.decode(encodedList, [dataTypes.list, [dataTypes.int]]);
+      assert.strictEqual(util.inspect(decodedList), util.inspect(listValue));
+      var mapValue = {value1: 'Surprise', value2: 'Madafaka'};
+      var encodedMap = typeEncoder.encode({hint: 'Map<\tTEXT\t,\tTEXT\t>', value: mapValue});
+      var decodedMap = typeEncoder.decode(encodedMap, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decodedMap), util.inspect(mapValue));
     });
   })
 });
