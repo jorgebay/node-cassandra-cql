@@ -152,9 +152,9 @@ Client.prototype._getAConnection = function (callback) {
           if (err) {
             //This connection is still not good, go for the next one
             self._setUnhealthy(c);
-            setTimeout(function () {
+            setImmediate(function() {
               checkNextConnection(callback);
-            }, 10);
+            });
           }
           else {
             //this connection is now good
@@ -165,9 +165,9 @@ Client.prototype._getAConnection = function (callback) {
       }
       else {
         //this connection is not good, try the next one
-        setTimeout(function () {
+        setImmediate(function() {
           checkNextConnection(callback);
-        }, 10);
+        });
       }
     }
     checkNextConnection(callback);
