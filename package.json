@@ -30,8 +30,7 @@
   "dependencies": {
     "async": ">= 0.2.5",
     "long": ">= 1.1.2",
-    "node-uuid": "1.4.0",
-     "portfinder": "0.2.1"
+    "node-uuid": "1.4.0"
   },
   "devDependencies": {
     "mocha": ">= 1.14.0"
