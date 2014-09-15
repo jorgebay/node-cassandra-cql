@@ -1,4 +1,14 @@
-﻿## Node.js CQL Driver for Apache Cassandra
+# This is not the driver you are looking for
+
+node-cassandra-cql has graduated from community driver to being the foundation of the official [Datastax Node.js Driver for Apache Cassandra](https://github.com/datastax/nodejs-driver).
+
+There will be no more development in this repository. I encourage everyone to start migrating to the new driver as soon as you can, it's got some great new features that you should try out, [along with an improved cql to javascript type mapping for prepared statements](http://datastax.github.io/nodejs-driver/datatypes).
+
+The node-cassandra-cql code and the old readme will remain here as legacy documentation.
+
+Read the [announcement of the new Node.js driver](http://www.datastax.com/dev/blog/introducing-datastax-nodejs-driver-cassandra) or [how to get started guide](http://datastax.github.io/nodejs-driver/getting-started).
+
+## Node.js CQL Driver for Apache Cassandra
 
 Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/) with a small dependency tree written in pure javascript.
 
