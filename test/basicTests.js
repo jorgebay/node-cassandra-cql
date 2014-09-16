@@ -77,6 +77,28 @@ describe('encoder', function () {
       assert.strictEqual(hinted, null);
       assert.strictEqual(unhinted, null);
     });
+
+
+    it('should encode hinted integer strings as integers', function () {
+      var value = '1';
+      var encoded = typeEncoder.encode({hint: 'int', value: value});
+      var decoded = typeEncoder.decode(encoded, [dataTypes.int]);
+      assert.strictEqual(decoded, +value);
+    });
+
+    it('should encode hinted float strings as floats', function () {
+      var value = '1.07';
+      var encoded = typeEncoder.encode({hint: 'float', value: value});
+      var decoded = typeEncoder.decode(encoded, [dataTypes.float]);
+      assert.strictEqual(Math.round(decoded*100), 107);
+    });
+
+    it('should encode hinted double strings as doubles', function () {
+      var value = '1.07';
+      var encoded = typeEncoder.encode({hint: 'double', value: value});
+      var decoded = typeEncoder.decode(encoded, [dataTypes.double]);
+      assert.strictEqual(Math.round(decoded*100), 107);
+    });
   });
 });
 
