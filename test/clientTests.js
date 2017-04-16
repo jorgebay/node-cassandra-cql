@@ -136,7 +136,7 @@ describe('Client', function () {
       ],
       //all finished
       function(err, results){
-        assert.strictEqual(err, null, err);
+        assert.equal(err, null, err);
         assert.ok(results[1], 'The result of a query must not be null nor undefined');
         done();
       });
